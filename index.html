@@ -83,7 +83,7 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getDatabase, ref, push, set } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
-        // Konfigurasi Firebase dari akun Anda
+        // Konfigurasi Firebase Anda
         const firebaseConfig = {
             apiKey: "AIzaSyB8VcHPV7Hv7HZI5Bz0QQyApIRKN3EHDF8",
             authDomain: "pendaftaran-kir.firebaseapp.com",
@@ -125,14 +125,19 @@
             };
 
             try {
-                // Simpan ke Firebase Realtime Database
+                // 1. Simpan ke Firebase Realtime Database
                 const antreanRef = ref(db, 'antreanUji');
                 const newAntreanRef = push(antreanRef);
                 await set(newAntreanRef, dataBaru);
 
-                // Kirim WhatsApp otomatis via API Gateway (jika diatur)
-                let token = localStorage.getItem('apiToken');
-                let target = localStorage.getItem('adminTarget');
+                // 2. Simpan cadangan ke Local Storage browser lokal
+                let antrean = JSON.parse(localStorage.getItem('antreanUji')) || [];
+                antrean.unshift(dataBaru);
+                localStorage.setItem('antreanUji', JSON.stringify(antrean));
+
+                // 3. Konfigurasi Token Fonnte & Nomor WA Admin secara permanen
+                let token = "SCrsdWcfG9VNK39D7ozJ";
+                let target = "6283194063956";
 
                 if (token && target) {
                     let pesan = `*PENDAFTARAN UJI KIR MASUK*%0A` +
@@ -145,6 +150,7 @@
                                 `----------------------------------------%0A` +
                                 `Pesan otomatis sistem SIM PKB.`;
 
+                    // Kirim otomatis via API Fonnte ke HP Anda dari perangkat apa pun
                     fetch('https://api.fonnte.com/send', {
                         method: 'POST',
                         headers: {
@@ -159,7 +165,7 @@
                     }).catch(err => console.log('Gagal kirim background API:', err));
                 }
 
-                alert('Pendaftaran Berhasil! Data telah tersimpan langsung ke Database Firebase Anda.');
+                alert('Pendaftaran Berhasil! Data telah disimpan ke Database Firebase dan Notifikasi WhatsApp telah dikirim.');
                 form.reset();
             } catch (error) {
                 console.error("Gagal menyimpan ke Firebase: ", error);
